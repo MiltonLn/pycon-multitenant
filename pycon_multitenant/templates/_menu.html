@@ -1,0 +1,10 @@
+<li {% if request.path == '' %} class="active" {% endif %}>
+    <a href="{% url 'home' %}">
+        <i class="fa fa-bookmark"></i> <span class="nav-label">Home</span>
+    </a>
+</li>
+<li {% if "/notes/create/" in request.path %} class="active" {% endif %}>
+    <a href="{% url 'notes:create' %}">
+        <i class="fa fa-note"></i> <span class="nav-label">Create Note</span>
+    </a>
+</li>
