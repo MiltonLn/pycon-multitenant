@@ -25,42 +25,66 @@ SECRET_KEY = 'm3tpohmn4fms1w&7m^04(3*96ese8cq957p@^b-5ymye3uo-um'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# We need to allow every host in development to support the subdomains,
+# Be sure to configure it properly in production
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
 
-INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
+SHARED_APPS = [
+    'tenant_schemas',  # mandatory, should always be before any django app
+    'tenants',  # you must list the app where your tenant model resides in
+
+    # everything below here is up to your project needs
+    'bootstrap3',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
+    'django.contrib.staticfiles'
 ]
 
+TENANT_APPS = [
+    # Your tenant-specific apps
+    'notes'
+]
+
+# We need to mix shared and tenant apps
+INSTALLED_APPS = SHARED_APPS + TENANT_APPS
+
+# We need to specify where our tenant model lives
+TENANT_MODEL = 'tenants.Tenant'
+
 MIDDLEWARE = [
+    # Add TenantMiddleware on top of the MIDDLEWARE list to allow every request
+    # redirect to the specific tenant
+    'tenant_schemas.middleware.TenantMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'config.urls'
+# Sometimes we want to have different urls and views in our public tenant and
+# our specific tenants, so we need to set the URLCONF files for each case
+# Please check: http://django-tenant-schemas.readthedocs.io/en/latest/install.html#tenant-view-routing
+# for more info.
+ROOT_URLCONF = 'config.tenant_urls'
+PUBLIC_SCHEMA_URLCONF = 'config.public_urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates')
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
         },
@@ -75,29 +99,20 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        # Use the tenant_schemas specific postgresql_backend
+        'ENGINE': 'tenant_schemas.postgresql_backend',
+        'NAME': 'pycon_multitenant',
+        'USER': 'pycon_multitenant',
+        'PASSWORD': 'pycon_multitenant',
+        'HOST': 'localhost'
     }
 }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators
-
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
+# We need to provide this DATABASE_ROUTER in order to get the apps synced to the
+# correct schema
+DATABASE_ROUTERS = (
+    'tenant_schemas.routers.TenantSyncRouter',
+)
 
 
 # Internationalization
@@ -118,3 +133,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
 STATIC_URL = '/static/'
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, "static"),
+)
+
+# Media files
+MEDIA_URL = '/media/'
+DEFAULT_FILE_STORAGE = 'tenant_schemas.storage.TenantFileSystemStorage'

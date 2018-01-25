@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load bootstrap3 %}
+
+{% block page_title %}
+    Create Tenant
+{% endblock page_title %}
+
+{% block panel_title %}
+    Create Tenant
+{% endblock panel_title %}
+
+{% block panel_content %}
+    <form action="" method="POST" class="form-horizontal" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="row">
+            {% bootstrap_form form layout="horizontal" %}
+
+            <center>{% bootstrap_button "Save" button_type="submit" button_class="btn-primary" %}</center>
+        </div>
+
+    </form>
+{% endblock panel_content %}

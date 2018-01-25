@@ -1,10 +1,24 @@
-<li {% if request.path == '' %} class="active" {% endif %}>
-    <a href="{% url 'home' %}">
-        <i class="fa fa-bookmark"></i> <span class="nav-label">Home</span>
-    </a>
-</li>
-<li {% if "/notes/create/" in request.path %} class="active" {% endif %}>
-    <a href="{% url 'notes:create' %}">
-        <i class="fa fa-note"></i> <span class="nav-label">Create Note</span>
-    </a>
-</li>
+<!-- We can use the tenant in the request to ask for the specific tenant we are in -->
+{% if request.tenant.schema_name == 'public' %}
+    <li {% if request.path == '/' %} class="active" {% endif %}>
+        <a href="{% url 'home' %}">
+            <i class="fa fa-bookmark"></i> <span class="nav-label">Home</span>
+        </a>
+    </li>
+    <li {% if "/tenants/create/" in request.path %} class="active" {% endif %}>
+        <a href="{% url 'tenants:create' %}">
+            <i class="fa fa-database"></i> <span class="nav-label">Create Tenant</span>
+        </a>
+    </li>
+{% else %}
+    <li {% if request.path == '/' %} class="active" {% endif %}>
+        <a href="{% url 'home' %}">
+            <i class="fa fa-bookmark"></i> <span class="nav-label">Home</span>
+        </a>
+    </li>
+    <li {% if "/notes/create/" in request.path %} class="active" {% endif %}>
+        <a href="{% url 'notes:create' %}">
+            <i class="fa fa-file-text-o"></i> <span class="nav-label">Create Note</span>
+        </a>
+    </li>
+{% endif %}
